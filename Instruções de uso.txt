@@ -1,0 +1,14 @@
+Instruções de uso
+
+1) No topo, escolha o modo: CLASSIFICAÇÃO ou REGRESSÃO.
+2) DADOS: clique na área do arquivo ou arraste um .txt para a janela.
+   O programa mostra o número de instâncias, de atributos e de classes.
+3) MÉTODO: escolha o método na lista.
+4) DIVISÃO TREINO / TESTE: use o controle deslizante (5% a 95%,
+   padrão 20%). O teste é a parte reservada para avaliar o modelo; o
+   restante é usado para treinar.
+5) EXECUTAR roda o método escolhido. EXECUTAR TODOS roda todos os
+   métodos do modo atual. LIMPAR apaga os resultados da tela.
+ 
+Se você trocar de modo com um arquivo carregado, o mesmo arquivo é
+lido de novo no novo modo.

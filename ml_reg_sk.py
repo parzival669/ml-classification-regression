@@ -11,12 +11,13 @@ from sklearn.linear_model import LinearRegression
 from sklearn import metrics as me
 from sklearn.preprocessing import StandardScaler
 
-def metricas(texto,y_teste,y_pred):
+
+def metricas(texto, y_teste, y_pred):
     mae = me.mean_absolute_error(y_teste, y_pred)
     mse = me.mean_squared_error(y_teste, y_pred)
     rmse = np.sqrt(mse)
     r2 = me.r2_score(y_teste, y_pred)
-    print("\n------------------------------------",texto)
+    print("\n------------------------------------", texto)
     print("------------------------------------")
     print(f"MAE ...............: {mae:.4f}")
     print(f"MSE ...............: {mse:.4f}")
@@ -28,18 +29,26 @@ def metricas(texto,y_teste,y_pred):
 # ==============================================================
 # LEITURA DO ARQUIVO
 # ==============================================================
+def codificar_atributos(atrib):
+    """Atributos de texto (ex.: cidade, 'acept', 'furnished') viram colunas 0/1 (one-hot).
+    Coluna majoritariamente numérica com valores sujos (ex.: '-') vira numérica; valores
+    ausentes/sujos são trocados pela mediana da coluna."""
+    atrib = atrib.copy()
+    for c in atrib.columns:
+        if not pd.api.types.is_numeric_dtype(atrib[c]):
+            num = pd.to_numeric(atrib[c], errors="coerce")
+            if num.notna().mean() >= 0.5:
+                atrib[c] = num
+    atrib = pd.get_dummies(atrib, dtype=float)
+    return atrib.fillna(atrib.median()).astype(float)
+
+
 def ler_arquivo(arquivo):
-    """Lê um .txt (CSV sem cabeçalho). Última coluna = valor a prever."""
-    df = pd.read_csv(arquivo, header=None, skipinitialspace=True).dropna()
-    if df.shape[1] < 2:
-        raise ValueError("O arquivo precisa ter ao menos 1 atributo e 1 alvo.")
-    try:
-        df = df.astype(float)
-    except ValueError:
-        raise ValueError("Na regressão todas as colunas, inclusive a última, devem ser numéricas.")
-    atributos = df.iloc[:, :-1].values
-    target = df.iloc[:, -1].values
+    df = pd.read_csv(arquivo, header=None)
+    atributos = codificar_atributos(df.iloc[:, :-1]).values
+    target = df.iloc[:, -1].astype(float).values
     return atributos, target
+
 
 def mlp_treino(x_train, y_train):
     mlp_model = MLPRegressor(
@@ -54,10 +63,12 @@ def mlp_treino(x_train, y_train):
     mlp_model.fit(x_train, y_train)
     return mlp_model
 
+
 def mlp_teste(x_teste, y_teste, mlp_model):
     y_pred = mlp_model.predict(x_teste)
-    return metricas("MLP",y_teste,y_pred)
-    
+    return metricas("MLP", y_teste, y_pred)
+
+
 def random_forest_treino(x_train, y_train):
     rf_model = RandomForestRegressor(
         n_estimators=80,
@@ -71,9 +82,11 @@ def random_forest_treino(x_train, y_train):
     rf_model.fit(x_train, y_train)
     return rf_model
 
+
 def random_forest_teste(x_teste, y_teste, rf_model):
     y_pred = rf_model.predict(x_teste)
-    return metricas("RANDOM FOREST",y_teste,y_pred)
+    return metricas("RANDOM FOREST", y_teste, y_pred)
+
 
 def knn_treino(x_train, y_train):
     knn_model = KNeighborsRegressor(
@@ -85,9 +98,11 @@ def knn_treino(x_train, y_train):
     knn_model.fit(x_train, y_train)
     return knn_model
 
+
 def knn_teste(x_teste, y_teste, knn_model):
     y_pred = knn_model.predict(x_teste)
-    return metricas("KNN",y_teste,y_pred)
+    return metricas("KNN", y_teste, y_pred)
+
 
 def svr_treino(x_train, y_train):
     svr_model = SVR(
@@ -99,18 +114,22 @@ def svr_treino(x_train, y_train):
     svr_model.fit(x_train, y_train)
     return svr_model
 
+
 def svr_teste(x_teste, y_teste, svr_model):
     y_pred = svr_model.predict(x_teste)
-    return metricas("SVR",y_teste,y_pred)
+    return metricas("SVR", y_teste, y_pred)
+
 
 def lr_treino(x_train, y_train):
     lr_model = LinearRegression()
     lr_model.fit(x_train, y_train)
     return lr_model
 
+
 def lr_teste(x_teste, y_teste, lr_model):
     y_pred = lr_model.predict(x_teste)
-    return metricas("REGRESSÃO LINEAR",y_teste,y_pred)
+    return metricas("REGRESSÃO LINEAR", y_teste, y_pred)
+
 
 def ada_treino(x_train, y_train):
     ada_model = AdaBoostRegressor(
@@ -121,9 +140,11 @@ def ada_treino(x_train, y_train):
     ada_model.fit(x_train, y_train)
     return ada_model
 
+
 def ada_teste(x_teste, y_teste, ada_model):
     y_pred = ada_model.predict(x_teste)
-    return metricas("ADABOOST",y_teste,y_pred)
+    return metricas("ADABOOST", y_teste, y_pred)
+
 
 # ==============================================================
 # INTEGRAÇÃO COM A INTERFACE (interface.py)
@@ -138,9 +159,10 @@ METODOS = {
     "AdaBoost": (ada_treino, ada_teste, False),
 }
 
+
 def preparar(feat, target, pct_teste):
     x_treino, x_teste, y_treino, y_teste = train_test_split(
-        feat, target, test_size=pct_teste/100, random_state=42
+        feat, target, test_size=pct_teste / 100, random_state=42
     )
     scaler = StandardScaler()
     x_treino_sc = scaler.fit_transform(x_treino)
@@ -148,6 +170,7 @@ def preparar(feat, target, pct_teste):
     return {"x_treino": x_treino, "x_teste": x_teste,
             "x_treino_sc": x_treino_sc, "x_teste_sc": x_teste_sc,
             "y_treino": y_treino, "y_teste": y_teste}
+
 
 def executar(nome, dados):
     treino, teste, normaliza = METODOS[nome]
@@ -160,28 +183,27 @@ def executar(nome, dados):
     resultado["metodo"] = nome
     return resultado
 
+
 # ==============================================================
 # MÓDULO PRINCIPAL
 # ==============================================================
+#   MÓDULO PRINCIPAL[
+# ==============================================================
 if __name__ == "__main__":
-    arquivo = "diabetes.txt"
+    arquivo = "dados_reg.txt"
 
     feat, target = ler_arquivo(arquivo)
 
     x_treino, x_teste, y_treino, y_teste = train_test_split(
-        feat,target,test_size=0.2,random_state=42
+        feat, target, test_size=0.2, random_state=42
     )
 
     scaler = StandardScaler()
     x_treino_sc = scaler.fit_transform(x_treino)
     x_teste_sc = scaler.transform(x_teste)
 
-    modelo = mlp_treino(x_treino_sc,y_treino)
-    mlp_teste(x_teste_sc,y_teste,modelo)
+    modelo = mlp_treino(x_treino_sc, y_treino)
+    mlp_teste(x_teste_sc, y_teste, modelo)
 
-    modelo = random_forest_treino(x_treino,y_treino)
-    random_forest_teste(x_teste,y_teste,modelo)
-
-
-
-
+    modelo = random_forest_treino(x_treino, y_treino)
+    random_forest_teste(x_teste, y_teste, modelo)

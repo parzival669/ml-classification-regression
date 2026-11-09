@@ -11,18 +11,19 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn import metrics as me
 from sklearn.preprocessing import StandardScaler
 
-def metricas(texto,y_teste,y_pred):
+
+def metricas(texto, y_teste, y_pred):
     cm = me.confusion_matrix(y_teste, y_pred)
     ac = me.accuracy_score(y_teste, y_pred)
-    pr = me.precision_score(y_teste, y_pred, average='macro', zero_division=0)
-    re = me.recall_score(y_teste, y_pred, average='macro', zero_division=0)
-    f1 = me.f1_score(y_teste, y_pred, average='macro', zero_division=0)
-    print("\n---------------- ",texto)
+    pr = me.precision_score(y_teste, y_pred, average='macro')
+    re = me.recall_score(y_teste, y_pred, average='macro')
+    f1 = me.f1_score(y_teste, y_pred, average='macro')
+    print("\n---------------- ", texto)
     print("Matriz de Confusão:\n", cm)
-    print(f"Acurácia...........: {ac*100:.2f}%")    
-    print(f"Precisão...........: {pr*100:.2f}%")
-    print(f"Recall.............: {re*100:.2f}%")
-    print(f"F1-measure.........: {f1*100:.2f}%")
+    print(f"Acurácia...........: {ac * 100:.2f}%")
+    print(f"Precisão...........: {pr * 100:.2f}%")
+    print(f"Recall.............: {re * 100:.2f}%")
+    print(f"F1-measure.........: {f1 * 100:.2f}%")
 
     # valores por classe e retorno (usados pela interface)
     pr_cl, re_cl, f1_cl, _ = me.precision_recall_fscore_support(
@@ -32,21 +33,31 @@ def metricas(texto,y_teste,y_pred):
             "ac": ac, "pr": pr, "re": re, "f1": f1,
             "pr_cl": pr_cl, "re_cl": re_cl, "f1_cl": f1_cl}
 
-def ler_arquivo(arquivo):
-    """Lê um .txt (CSV sem cabeçalho). Última coluna = classe."""
-    df = pd.read_csv(arquivo, header=None, skipinitialspace=True).dropna()
-    if df.shape[1] < 2:
-        raise ValueError("O arquivo precisa ter ao menos 1 atributo e 1 classe.")
 
-    try:
-        atributos = df.iloc[:, :-1].astype(float).values.tolist()
-    except ValueError:
-        raise ValueError("Os atributos (todas as colunas menos a última) devem ser numéricos.")
-    classes = [c.strip() if isinstance(c, str) else c for c in df.iloc[:, -1].tolist()]
+def codificar_atributos(atrib):
+    """Atributos de texto (ex.: cidade, 'acept', 'furnished') viram colunas 0/1 (one-hot).
+    Coluna majoritariamente numérica com valores sujos (ex.: '-') vira numérica; valores
+    ausentes/sujos são trocados pela mediana da coluna."""
+    atrib = atrib.copy()
+    for c in atrib.columns:
+        if not pd.api.types.is_numeric_dtype(atrib[c]):
+            num = pd.to_numeric(atrib[c], errors="coerce")
+            if num.notna().mean() >= 0.5:
+                atrib[c] = num
+    atrib = pd.get_dummies(atrib, dtype=float)
+    return atrib.fillna(atrib.median()).astype(float)
+
+
+def ler_arquivo(arquivo):
+    df = pd.read_csv(arquivo, header=None)
+
+    atributos = codificar_atributos(df.iloc[:, :-1]).values.tolist()
+    classes = df.iloc[:, -1].tolist()
 
     return atributos, classes
 
-def mlp_treino(x_train, y_train):  
+
+def mlp_treino(x_train, y_train):
     mlp_model = MLPClassifier(
         hidden_layer_sizes=(125,),
         activation='logistic',
@@ -56,12 +67,14 @@ def mlp_treino(x_train, y_train):
         max_iter=10000
     )
     mlp_model.fit(x_train, y_train)
-    
+
     return mlp_model
 
-def mlp_teste(x_teste, y_teste, mlp_model): 
+
+def mlp_teste(x_teste, y_teste, mlp_model):
     y_pred = mlp_model.predict(x_teste)
-    return metricas("MLP",y_teste,y_pred)
+    return metricas("MLP", y_teste, y_pred)
+
 
 def rf_treino(x_train, y_train):
     rf_model = RandomForestClassifier(
@@ -79,9 +92,8 @@ def rf_treino(x_train, y_train):
 
 
 def rf_teste(x_teste, y_teste, rf_model):
-
     y_pred = rf_model.predict(x_teste)
-    return metricas("RANDOM FOREST",y_teste,y_pred)
+    return metricas("RANDOM FOREST", y_teste, y_pred)
 
 
 def knn_treino(x_train, y_train):
@@ -97,7 +109,7 @@ def knn_treino(x_train, y_train):
 
 def knn_teste(x_teste, y_teste, knn_model):
     y_pred = knn_model.predict(x_teste)
-    return metricas("KNN",y_teste,y_pred)
+    return metricas("KNN", y_teste, y_pred)
 
 
 def svm_treino(x_train, y_train):
@@ -113,7 +125,7 @@ def svm_treino(x_train, y_train):
 
 def svm_teste(x_teste, y_teste, svm_model):
     y_pred = svm_model.predict(x_teste)
-    return metricas("SVM",y_teste,y_pred)
+    return metricas("SVM", y_teste, y_pred)
 
 
 def dt_treino(x_train, y_train):
@@ -130,7 +142,7 @@ def dt_treino(x_train, y_train):
 
 def dt_teste(x_teste, y_teste, dt_model):
     y_pred = dt_model.predict(x_teste)
-    return metricas("ÁRVORE DE DECISÃO",y_teste,y_pred)
+    return metricas("ÁRVORE DE DECISÃO", y_teste, y_pred)
 
 
 def gb_treino(x_train, y_train):
@@ -146,7 +158,7 @@ def gb_treino(x_train, y_train):
 
 def gb_teste(x_teste, y_teste, gb_model):
     y_pred = gb_model.predict(x_teste)
-    return metricas("GRADIENT BOOSTING",y_teste,y_pred)
+    return metricas("GRADIENT BOOSTING", y_teste, y_pred)
 
 
 def ada_treino(x_train, y_train):
@@ -161,7 +173,7 @@ def ada_treino(x_train, y_train):
 
 def ada_teste(x_teste, y_teste, ada_model):
     y_pred = ada_model.predict(x_teste)
-    return metricas("ADABOOST",y_teste,y_pred)
+    return metricas("ADABOOST", y_teste, y_pred)
 
 
 # **************************************************************
@@ -178,16 +190,17 @@ METODOS = {
     "AdaBoost": (ada_treino, ada_teste, False),
 }
 
+
 def preparar(feat, cl_str, pct_teste):
     classes = sorted(set(cl_str))
     cl = np.array([classes.index(c) for c in cl_str])
     try:
         x_treino, x_teste, y_treino, y_teste = train_test_split(
-            feat, cl, test_size=pct_teste/100, random_state=42, stratify=cl
+            feat, cl, test_size=pct_teste / 100, random_state=42, stratify=cl
         )
     except ValueError:  # alguma classe com poucas amostras para estratificar
         x_treino, x_teste, y_treino, y_teste = train_test_split(
-            feat, cl, test_size=pct_teste/100, random_state=42
+            feat, cl, test_size=pct_teste / 100, random_state=42
         )
     scaler = StandardScaler()
     x_treino_sc = scaler.fit_transform(x_treino)
@@ -196,6 +209,7 @@ def preparar(feat, cl_str, pct_teste):
             "x_treino": x_treino, "x_teste": x_teste,
             "x_treino_sc": x_treino_sc, "x_teste_sc": x_teste_sc,
             "y_treino": y_treino, "y_teste": y_teste}
+
 
 def executar(nome, dados):
     treino, teste, normaliza = METODOS[nome]
@@ -206,7 +220,7 @@ def executar(nome, dados):
     modelo = treino(x_tr, dados["y_treino"])
     resultado = teste(x_te, dados["y_teste"], modelo)
     resultado["metodo"] = nome
-    resultado["classes"] = [str(dados["classes"][int(i)]) for i in resultado["rotulos"]]
+    resultado["classes"] = [dados["classes"][int(i)] for i in resultado["rotulos"]]
     return resultado
 
 
@@ -214,7 +228,7 @@ def executar(nome, dados):
 #                       MÓDULO PRINCIPAL
 # **************************************************************
 if __name__ == "__main__":
-    arquivo = "iris.txt"  # ou winequality.txt
+    arquivo = "iris.txt"
     feat, cl_str = ler_arquivo(arquivo)
     classes = list(set(cl_str))
     cl = np.array([classes.index(c) for c in cl_str])
@@ -232,9 +246,9 @@ if __name__ == "__main__":
     x_teste_sc = scaler.transform(x_teste)
 
     # MLP
-    modelo_mlp = mlp_treino(x_treino_sc,y_treino)
-    mlp_teste(x_teste_sc,y_teste,modelo_mlp)
+    modelo_mlp = mlp_treino(x_treino_sc, y_treino)
+    mlp_teste(x_teste_sc, y_teste, modelo_mlp)
 
     # RANDOM FOREST
-    modelo_rf = rf_treino(x_treino,y_treino)
-    rf_teste(x_teste,y_teste,modelo_rf)
+    modelo_rf = rf_treino(x_treino, y_treino)
+    rf_teste(x_teste, y_teste, modelo_rf)

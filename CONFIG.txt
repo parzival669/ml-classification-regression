@@ -1,0 +1,93 @@
+CLASSIFICAÇÃO
+---------------------------------------------------------------------
+MLP [MLPClassifier] - normaliza: sim - origem: código base
+    hidden_layer_sizes = (125,)
+    activation = 'logistic'
+    solver = 'adam'
+    alpha = 0.01
+    learning_rate = 'adaptive'
+    max_iter = 10000
+    # random_state não definido: o resultado varia a cada execução
+    # learning_rate só tem efeito com solver='sgd'
+ 
+Random Forest [RandomForestClassifier] - normaliza: não - origem: código base
+    n_estimators = 100
+    criterion = 'gini'
+    max_depth = None
+    min_samples_split = 2
+    min_samples_leaf = 1
+    random_state = 42
+    n_jobs = -1
+ 
+KNN [KNeighborsClassifier] - normaliza: sim - origem: acrescentado
+    n_neighbors = 5
+    weights = 'uniform'
+    metric = 'minkowski'
+    n_jobs = -1
+ 
+SVM [SVC] - normaliza: sim - origem: acrescentado
+    kernel = 'rbf'
+    C = 1.0
+    gamma = 'scale'
+    random_state = 42
+ 
+Árvore de Decisão [DecisionTreeClassifier] - normaliza: não - origem: acrescentado
+    criterion = 'gini'
+    max_depth = None
+    min_samples_split = 2
+    min_samples_leaf = 1
+    random_state = 42
+ 
+Gradient Boosting [GradientBoostingClassifier] - normaliza: não - origem: acrescentado
+    n_estimators = 100
+    learning_rate = 0.1
+    max_depth = 3
+    random_state = 42
+ 
+AdaBoost [AdaBoostClassifier] - normaliza: não - origem: acrescentado
+    n_estimators = 100
+    learning_rate = 1.0
+    random_state = 42
+ 
+ 
+  REGRESSÃO
+---------------------------------------------------------------------
+MLP [MLPRegressor] - normaliza: sim - origem: código base
+    hidden_layer_sizes = (150,)
+    activation = 'relu'
+    solver = 'lbfgs'
+    alpha = 0.01
+    learning_rate = 'adaptive'
+    max_iter = 1000
+    random_state = 42
+    # learning_rate só tem efeito com solver='sgd'
+    # com max_iter=1000 o aviso de convergência (lbfgs) é comum e inofensivo
+ 
+Random Forest [RandomForestRegressor] - normaliza: não - origem: código base
+    n_estimators = 80
+    criterion = 'squared_error'
+    max_depth = None
+    min_samples_split = 2
+    min_samples_leaf = 1
+    random_state = 42
+    n_jobs = -1
+ 
+KNN [KNeighborsRegressor] - normaliza: sim - origem: acrescentado
+    n_neighbors = 5
+    weights = 'uniform'
+    metric = 'minkowski'
+    n_jobs = -1
+ 
+SVR [SVR] - normaliza: sim - origem: acrescentado
+    kernel = 'rbf'
+    C = 1.0
+    epsilon = 0.1
+    gamma = 'scale'
+ 
+Regressão Linear [LinearRegression] - normaliza: não - origem: acrescentado
+    # sem parâmetros: usa os valores padrão
+ 
+AdaBoost [AdaBoostRegressor] - normaliza: não - origem: acrescentado
+    n_estimators = 100
+    learning_rate = 1.0
+    random_state = 42
